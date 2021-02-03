@@ -1,7 +1,34 @@
 defmodule DecentApp do
   alias DecentApp.Balance
 
+  @valid_cmds ["DUP", "COIN", "+", "-", "POP", "NOTHING"]
+
   def call(%Balance{} = balance, commands) do
+    cond do
+      !is_valid_list?(commands, true) -> -1 # Validate list of commands
+      true ->
+        proocess(balance, [], commands)
+    end
+  end
+
+  defp proocess(_balance, _result, _commands) do
+
+  end
+
+  # Cycles through the commands list input to ensure commands
+  # are valid or integers
+  def is_valid_list?(_, false), do: false
+  def is_valid_list?([], true), do: true
+  def is_valid_list?([head | tail], true) do
+    cond do
+      !is_integer(head) ->
+        if Enum.member?(@valid_cmds, head), do: is_valid_list?(tail, true), else: is_valid_list?(tail, false)
+      true -> is_valid_list?(tail, true)
+    end
+  end
+
+
+  def call_old(%Balance{} = balance, commands) do
     {balance, result, error} =
       Enum.reduce(commands, {balance, [], false}, fn command, {bal, res, error} ->
         if error do
