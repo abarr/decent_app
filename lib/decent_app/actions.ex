@@ -20,7 +20,7 @@ defmodule DecentApp.Actions do
 
   def action(:multiply, list) do
     [first, second | rest] = Enum.reverse(list)
-    Enum.reverse(rest) ++ [first * second]
+    rest ++ [Integer.to_string(first * second )]
   end
 
   def action(:insert, list, item), do: list ++ [item]

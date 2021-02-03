@@ -11,11 +11,26 @@ defmodule DecentAppTest do
       {new_balance, result} =
         DecentApp.call(balance, [3, "DUP", "COINS", 5, "+", "NOTHING", "POP", 7, "-", 9])
 
+      assert DecentApp.call(balance, [3, "DUP", "COINS", 5, "+", "NOTHING", "POP", 7, "-", 9])
+        == {%DecentApp.Balance{coins: 5}, [4, 9]}
       assert new_balance.coins == 5
       assert length(result) > 1
     end
 
+    test "success - new" do
+      balance = %Balance{coins: 10}
+      {new_balance, result} =
+        DecentApp.call(balance, [3, "DUP", "COINS", 5, "+", "NOTHING", "POP", 7, "-", 9, "*"])
+
+        assert DecentApp.call(balance, [3, "DUP", "COINS", 5, "+", "NOTHING", "POP", 7, "-", 9, "*"])
+          == {%DecentApp.Balance{coins: 2}, ["36"]}
+        assert new_balance.coins == 2
+        assert length(result) > 0
+    end
+
+
     test "failed" do
+      balance = %Balance{coins: 10}
       assert DecentApp.call(%Balance{coins: 10}, [
                3,
                "DUP",
@@ -29,6 +44,8 @@ defmodule DecentAppTest do
                9
              ]) == -1
 
+      assert DecentApp.call(balance, ["COINS", 5, "+", "NOTHING", "POP", 7, "-", 9, "*"])
+        == -1
       assert DecentApp.call(%Balance{coins: 1}, [10, 5, 6]) == -1
       assert DecentApp.call(%Balance{coins: 1}, [3, 5, 6]) == -1
       assert DecentApp.call(%Balance{coins: 10}, ["+"]) == -1
