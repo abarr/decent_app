@@ -1,29 +1,85 @@
 defmodule DecentApp do
   alias DecentApp.Balance
 
-  @valid_cmds ["DUP", "COIN", "+", "-", "POP", "NOTHING"]
+  @valid_cmds ["DUP", "COINS", "+", "-", "POP", "NOTHING"]
 
   def call(%Balance{} = balance, commands) do
     cond do
-      !is_valid_list?(commands, true) -> -1 # Validate list of commands
+      !is_valid_list?(commands, true) ->
+        IO.puts(:invalid_list)
+        -1
       true ->
-        proocess(balance, [], commands)
+        process(balance, [], commands)
     end
   end
 
-  defp proocess(_balance, _result, _commands) do
-    
+  defp process(balance, result, []), do: {balance, result}
+  defp process(balance, result, [head | tail]) when is_list(result) do
+    case cmd(head, result, balance) do
+      {result, balance} -> process(balance, result, tail)
+      error ->
+        IO.puts(error)
+        -1
+    end
   end
 
-  # Cycles through the commands list input to ensure commands
-  # are valid or integers
+  # CMD Definitions
+  defp cmd(number, result, balance) when is_integer(number) do
+    {result ++ [number], balance}
+  end
+
+  defp cmd("DUP", result, balance) do
+    cond do
+      length(result) < 1 ->
+        :invalid_dup
+      true -> {result ++ [List.last(result)], balance}
+    end
+  end
+
+  defp cmd("NOTHING", result, balance), do: {result, balance}
+  defp cmd("COINS", result, balance), do: {result, balance}
+  defp cmd("POP", result, balance) do
+    cond do
+      length(result) < 1 -> :invalid_pop
+      true ->
+        {_, result} = List.pop_at(result, length(result) - 1)
+        {result, balance}
+    end
+  end
+  defp cmd("+", result, balance) do
+    cond do
+      length(result) < 2 -> :invalid_add
+      true ->
+        [first, second | rest] = Enum.reverse(result)
+        {Enum.reverse(rest) ++ [first + second], balance}
+    end
+  end
+  defp cmd("-", result, balance) do
+    cond do
+      length(result) < 2 -> :invalid_minus
+      true ->
+        [first, second | rest] = Enum.reverse(result)
+        {Enum.reverse(rest) ++ [first - second], balance}
+      end
+  end
+
+  # Command List Validation
   def is_valid_list?(_, false), do: false
   def is_valid_list?([], true), do: true
   def is_valid_list?([head | tail], true) do
     cond do
       !is_integer(head) ->
-        if Enum.member?(@valid_cmds, head), do: is_valid_list?(tail, true), else: is_valid_list?(tail, false)
-      true -> is_valid_list?(tail, true)
+        if Enum.member?(@valid_cmds, head) do
+          is_valid_list?(tail, true)
+        else
+          is_valid_list?(tail, false)
+        end
+      true ->
+        if Enum.member?(0..10, head) do
+          is_valid_list?(tail, true)
+        else
+          is_valid_list?(tail, false)
+        end
     end
   end
 

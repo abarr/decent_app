@@ -9,7 +9,7 @@
 
 Validate list of commands - Ensure all values in list exist as defined commands, if not CMDS is invalid and DecentApp.call returns -1.
 
-## process Commands
+## Process Commands
 
 Creat recursive functions to process each command.
 
