@@ -12,7 +12,7 @@ defmodule DecentApp do
   end
 
   defp proocess(_balance, _result, _commands) do
-
+    
   end
 
   # Cycles through the commands list input to ensure commands
