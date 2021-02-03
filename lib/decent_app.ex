@@ -4,7 +4,7 @@ defmodule DecentApp do
     %Balance{} struct and return a results list.
   """
   alias DecentApp.Balance
-  @valid_cmds ["DUP", "COINS", "+", "-", "POP", "NOTHING"]
+  @cmds Application.fetch_env!(:decent_app, :commands)
 
   @doc """
   Returns a list of results after successfully  processing a list of list_of_cmds
@@ -30,8 +30,9 @@ defmodule DecentApp do
 
   """
   def call(%Balance{} = balance, commands) do
+    valid_cmds = Enum.map(@cmds, fn c -> c.key end)
     cond do
-      !is_valid_list?(commands, true) ->
+      !is_valid_list?(commands, valid_cmds, true) ->
         -1
 
       true ->
@@ -106,23 +107,23 @@ defmodule DecentApp do
   end
 
   # Command List Validation
-  def is_valid_list?(_, false), do: false
-  def is_valid_list?([], true), do: true
+  def is_valid_list?(_, _, false), do: false
+  def is_valid_list?([], _, true), do: true
 
-  def is_valid_list?([head | tail], true) do
+  def is_valid_list?([head | tail], valid_cmds, true) do
     cond do
       !is_integer(head) ->
-        if Enum.member?(@valid_cmds, head) do
-          is_valid_list?(tail, true)
+        if Enum.member?(valid_cmds, head) do
+          is_valid_list?(tail, valid_cmds, true)
         else
-          is_valid_list?(tail, false)
+          is_valid_list?(tail, valid_cmds, false)
         end
 
       true ->
         if Enum.member?(0..9, head) do
-          is_valid_list?(tail, true)
+          is_valid_list?(tail, valid_cmds, true)
         else
-          is_valid_list?(tail, false)
+          is_valid_list?(tail, valid_cmds, false)
         end
     end
   end
