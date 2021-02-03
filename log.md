@@ -21,4 +21,7 @@ Each command must be assessed for validity to enforce business rules:
 [TODO: Extensibility ... cost and payments should be a part of cmd definition]
 [TODO: Extensibility ... List min length should be a part of cmd definition]
 
-    
+ ## Update Balance
+
+ Each CMD has a potential cost or payment
+ Update CMD functions to apply both   

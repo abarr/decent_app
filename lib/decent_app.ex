@@ -25,25 +25,26 @@ defmodule DecentApp do
 
   # CMD Definitions
   defp cmd(number, result, balance) when is_integer(number) do
-    {result ++ [number], balance}
+    {result ++ [number], %{balance | coins: balance.coins - 1}}
   end
 
   defp cmd("DUP", result, balance) do
     cond do
       length(result) < 1 ->
         :invalid_dup
-      true -> {result ++ [List.last(result)], balance}
+      true ->
+        {result ++ [List.last(result)], %{balance | coins: balance.coins - 1}}
     end
   end
 
-  defp cmd("NOTHING", result, balance), do: {result, balance}
-  defp cmd("COINS", result, balance), do: {result, balance}
+  defp cmd("NOTHING", result, balance), do: {result, %{balance | coins: balance.coins - 1}}
+  defp cmd("COINS", result, balance), do: {result, %{balance | coins: balance.coins + 5}}
   defp cmd("POP", result, balance) do
     cond do
       length(result) < 1 -> :invalid_pop
       true ->
         {_, result} = List.pop_at(result, length(result) - 1)
-        {result, balance}
+        {result, %{balance | coins: balance.coins - 1}}
     end
   end
   defp cmd("+", result, balance) do
@@ -51,7 +52,7 @@ defmodule DecentApp do
       length(result) < 2 -> :invalid_add
       true ->
         [first, second | rest] = Enum.reverse(result)
-        {Enum.reverse(rest) ++ [first + second], balance}
+        {Enum.reverse(rest) ++ [first + second], %{balance | coins: balance.coins - 2}}
     end
   end
   defp cmd("-", result, balance) do
@@ -59,7 +60,7 @@ defmodule DecentApp do
       length(result) < 2 -> :invalid_minus
       true ->
         [first, second | rest] = Enum.reverse(result)
-        {Enum.reverse(rest) ++ [first - second], balance}
+        {Enum.reverse(rest) ++ [first - second], %{balance | coins: balance.coins - 1}}
       end
   end
 
@@ -82,7 +83,6 @@ defmodule DecentApp do
         end
     end
   end
-
 
   def call_old(%Balance{} = balance, commands) do
     {balance, result, error} =
