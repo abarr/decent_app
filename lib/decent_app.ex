@@ -43,7 +43,6 @@ defmodule DecentApp do
   end
 
   defp process(balance, result, [], _rules), do: {balance, result}
-
   defp process(%{coins: coins} = balance, result, [head | tail], rules) when is_list(result) do
     cond do
       coins < 0 ->
@@ -68,22 +67,19 @@ defmodule DecentApp do
   end
 
   # CMD Definitions
-  defp cmd(cmd, result, balance, rule) when is_integer(cmd) do
-    {Actions.action(rule.action, result, cmd), Balance.update_coins(balance, rule)}
-  end
-
-  defp cmd(_cmd, result, balance, rule) do
+  defp cmd(cmd, result, balance, rule) do
     cond do
       length(result) < rule.min_length -> :invalid
-      true -> {Actions.action(rule.action, result), Balance.update_coins(balance, rule)}
+      true ->
+        {Actions.action(rule.action, result, cmd), Balance.update_coins(balance, rule)}
     end
   end
 
   # Command List Validation
-  def is_valid_list?(_, _, false), do: false
-  def is_valid_list?([], _, true), do: true
+  defp is_valid_list?(_, _, false), do: false
+  defp is_valid_list?([], _, true), do: true
 
-  def is_valid_list?([head | tail], valid_cmds, true) do
+  defp is_valid_list?([head | tail], valid_cmds, true) do
     cond do
       !is_integer(head) ->
         if Enum.member?(valid_cmds, head) do
