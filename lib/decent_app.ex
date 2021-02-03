@@ -69,13 +69,13 @@ defmodule DecentApp do
 
   # CMD Definitions
   defp cmd(cmd, result, balance, rule) when is_integer(cmd) do
-    {Actions.action(rule.action, result, cmd), update_coins(balance, rule)}
+    {Actions.action(rule.action, result, cmd), Balance.update_coins(balance, rule)}
   end
 
   defp cmd(_cmd, result, balance, rule) do
     cond do
       length(result) < rule.min_length -> :invalid
-      true -> {Actions.action(rule.action, result), update_coins(balance, rule)}
+      true -> {Actions.action(rule.action, result), Balance.update_coins(balance, rule)}
     end
   end
 
@@ -101,9 +101,4 @@ defmodule DecentApp do
     end
   end
 
-  defp update_coins(balance, rule) do
-    coins = balance.coins + rule.payment - rule.cost
-    balance
-    |> Map.put(:coins, coins)
-  end
 end
