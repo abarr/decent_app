@@ -11,8 +11,8 @@ defmodule DecentApp do
 
   ## Examples
 
-      iex> DecentApp.call(%DecentApp.Balance{ coins: 10}, [10, "DUP"])
-      {%DecentApp.Balance{coins: 8}, [10, 10]}
+      iex> DecentApp.call(%DecentApp.Balance{ coins: 10}, [9, "DUP"])
+      {%DecentApp.Balance{coins: 8}, [9, 9]}
 
   Unrecognised commands will result in a failure and a return value of -1
 
@@ -25,7 +25,7 @@ defmodule DecentApp do
 
   ## Examples
 
-    iex> DecentApp.call(%DecentApp.Balance{ coins: 1}, [10, "+"])
+    iex> DecentApp.call(%DecentApp.Balance{ coins: 1}, [9, 8, "+"])
     -1
 
   """
@@ -119,7 +119,7 @@ defmodule DecentApp do
         end
 
       true ->
-        if Enum.member?(0..10, head) do
+        if Enum.member?(0..9, head) do
           is_valid_list?(tail, true)
         else
           is_valid_list?(tail, false)

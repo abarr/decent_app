@@ -29,6 +29,19 @@ defmodule DecentAppTest do
                9
              ]) == -1
 
+             assert DecentApp.call(%Balance{coins: 10}, [
+              3,
+              "DUP",
+              "FALSE",
+              5,
+              "+",
+              "NOTHING",
+              "POP",
+              7,
+              "-",
+              10
+            ]) == -1
+
       assert DecentApp.call(%Balance{coins: 1}, [3, 5, 6]) == -1
       assert DecentApp.call(%Balance{coins: 10}, ["+"]) == -1
       assert DecentApp.call(%Balance{coins: 10}, ["-"]) == -1
