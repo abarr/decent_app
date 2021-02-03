@@ -1,8 +1,34 @@
 defmodule DecentApp do
+  @moduledoc """
+    This module provides a function to process a list of list of commands, update a
+    %Balance{} struct and return a results list.
+  """
   alias DecentApp.Balance
-
   @valid_cmds ["DUP", "COINS", "+", "-", "POP", "NOTHING"]
 
+  @doc """
+  Returns a list of results after successfully  processing a list of list_of_cmds
+
+  ## Examples
+
+      iex> DecentApp.call(%DecentApp.Balance{ coins: 10}, [10, "DUP"])
+      {%DecentApp.Balance{coins: 8}, [10, 10]}
+
+  Unrecognised commands will result in a failure and a return value of -1
+
+  ## Examples
+
+    iex> DecentApp.call(%DecentApp.Balance{ coins: 10}, ["FAKE"])
+    -1
+
+  If the coins in %Balance{} falls below zero the call will fail and return -1
+
+  ## Examples
+
+    iex> DecentApp.call(%DecentApp.Balance{ coins: 1}, [10, "+"])
+    -1
+
+  """
   def call(%Balance{} = balance, commands) do
     cond do
       !is_valid_list?(commands, true) ->
@@ -100,5 +126,4 @@ defmodule DecentApp do
         end
     end
   end
-
 end
