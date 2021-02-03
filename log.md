@@ -25,3 +25,7 @@ Each command must be assessed for validity to enforce business rules:
 
  Each CMD has a potential cost or payment
  Update CMD functions to apply both   
+
+ Add inb check to make sure that teh coin balance does not go below zero, if it does throw and error - return -1
+
+ 
