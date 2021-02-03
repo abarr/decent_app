@@ -50,13 +50,18 @@
     %{
         key: "DUP",
         action: :duplication,
-        number_of_list_items: 1,
+        min_length: 1,
         # validation: %{range: 0..9},
         cost: 1,
         payment: 0
     }
     ```
 
-    I don't think it worth having configurable validation for range ... given the nature of the application I will leave it as a hard coded rule. 
+    * I don't think it worth having configurable validation for range ... given the nature of the application I will leave it as a hard coded rule. 
     The number of items can be used as a min_length validation
+ 
+    ** Min_length is the requirment and multiple actions should be represented in teh list of CMDS
+
+    
+
 

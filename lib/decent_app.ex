@@ -4,6 +4,7 @@ defmodule DecentApp do
     %Balance{} struct and return a results list.
   """
   alias DecentApp.Balance
+  alias DecentApp.Actions
   @cmds Application.fetch_env!(:decent_app, :commands)
 
   @doc """
@@ -31,78 +32,50 @@ defmodule DecentApp do
   """
   def call(%Balance{} = balance, commands) do
     valid_cmds = Enum.map(@cmds, fn c -> c.key end)
+
     cond do
       !is_valid_list?(commands, valid_cmds, true) ->
         -1
 
       true ->
-        process(balance, [], commands)
+        process(balance, [], commands, @cmds)
     end
   end
 
-  defp process(balance, result, []), do: {balance, result}
+  defp process(balance, result, [], _rules), do: {balance, result}
 
-  defp process(%{coins: coins} = balance, result, [head | tail]) when is_list(result) do
+  defp process(%{coins: coins} = balance, result, [head | tail], rules) when is_list(result) do
     cond do
       coins < 0 ->
         -1
 
+      is_integer(head) ->
+        rule = Enum.find(rules, fn cmd -> cmd.key == "PUSH" end)
+
+        case cmd(head, result, balance, rule) do
+          {result, balance} -> process(balance, result, tail, rules)
+          _ -> -1
+        end
+
       true ->
-        case cmd(head, result, balance) do
-          {result, balance} -> process(balance, result, tail)
+        rule = Enum.find(rules, fn cmd -> cmd.key == head end)
+
+        case cmd(head, result, balance, rule) do
+          {result, balance} -> process(balance, result, tail, rules)
           _ -> -1
         end
     end
   end
 
   # CMD Definitions
-  defp cmd(number, result, balance) when is_integer(number) do
-    {result ++ [number], %{balance | coins: balance.coins - 1}}
+  defp cmd(cmd, result, balance, rule) when is_integer(cmd) do
+    {Actions.action(rule.action, result, cmd), update_coins(balance, rule)}
   end
 
-  defp cmd("DUP", result, balance) do
+  defp cmd(_cmd, result, balance, rule) do
     cond do
-      length(result) < 1 ->
-        :invalid_dup
-
-      true ->
-        {result ++ [List.last(result)], %{balance | coins: balance.coins - 1}}
-    end
-  end
-
-  defp cmd("NOTHING", result, balance), do: {result, %{balance | coins: balance.coins - 1}}
-  defp cmd("COINS", result, balance), do: {result, %{balance | coins: balance.coins + 5}}
-
-  defp cmd("POP", result, balance) do
-    cond do
-      length(result) < 1 ->
-        :invalid_pop
-
-      true ->
-        {_, result} = List.pop_at(result, length(result) - 1)
-        {result, %{balance | coins: balance.coins - 1}}
-    end
-  end
-
-  defp cmd("+", result, balance) do
-    cond do
-      length(result) < 2 ->
-        :invalid_add
-
-      true ->
-        [first, second | rest] = Enum.reverse(result)
-        {Enum.reverse(rest) ++ [first + second], %{balance | coins: balance.coins - 2}}
-    end
-  end
-
-  defp cmd("-", result, balance) do
-    cond do
-      length(result) < 2 ->
-        :invalid_minus
-
-      true ->
-        [first, second | rest] = Enum.reverse(result)
-        {Enum.reverse(rest) ++ [first - second], %{balance | coins: balance.coins - 1}}
+      length(result) < rule.min_length -> :invalid
+      true -> {Actions.action(rule.action, result), update_coins(balance, rule)}
     end
   end
 
@@ -126,5 +99,11 @@ defmodule DecentApp do
           is_valid_list?(tail, valid_cmds, false)
         end
     end
+  end
+
+  defp update_coins(balance, rule) do
+    coins = balance.coins + rule.payment - rule.cost
+    balance
+    |> Map.put(:coins, coins)
   end
 end
