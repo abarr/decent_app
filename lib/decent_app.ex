@@ -29,9 +29,10 @@ defmodule DecentApp do
 
   """
 
-  def call(%Balance{} = balance, commands) do
+  def call(%Balance{} = balance, commands) when is_list(commands) do
     Processor.process(balance, [], commands, :valid)
   end
 
+  def call(_balance, _commands), do: -1
 
 end
