@@ -29,9 +29,9 @@ defmodule DecentApp do
 
   """
 
-  def call(%Balance{} = balance, cmd_configs) do
-    Processor.process(balance, [], cmd_configs, :valid)
+  def call(%Balance{} = balance, commands) do
+    Processor.process(balance, [], commands, :valid)
   end
 
-  
+
 end
