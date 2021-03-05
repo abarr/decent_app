@@ -1,9 +1,9 @@
 defmodule DecentApp do
   @moduledoc """
-    This module provides a function to process a list of list of commands, update a
+    This module provides a function to process a list of list of cmd_configs, update a
     %Balance{} struct and return a results list.
   """
-  alias DecentApp.{Balance, Config}
+  alias DecentApp.{Balance, Processor}
 
   @doc """
   Returns a list of results after successfully  processing a list of list_of_cmds
@@ -13,7 +13,7 @@ defmodule DecentApp do
       iex> DecentApp.call(%DecentApp.Balance{ coins: 10}, [9, "DUP"])
       {%DecentApp.Balance{coins: 8}, [9, 9]}
 
-  Unrecognised commands will result in a failure and a return value of -1
+  Unrecognised cmd_configs will result in a failure and a return value of -1
 
   ## Examples
 
@@ -29,39 +29,9 @@ defmodule DecentApp do
 
   """
 
-  def call(%Balance{} = balance, commands) do
-    process(balance, [], commands, true)
+  def call(%Balance{} = balance, cmd_configs) do
+    Processor.process(balance, [], cmd_configs, :valid)
   end
 
-  def process(_, _, _, false), do: -1
-  def process(balance, result, [], _valid), do: {balance, result}
-
-  def process(balance, result, [cmd | tail], true) do
-    with %{} = command <- find_command_config(cmd),
-         true <- valid?(command.validation_rules, result),
-         result <- command.perform.(result, cmd),
-         %Balance{} = balance <- Balance.update_coins(balance, command.price) do
-      process(balance, result, tail, true)
-    else
-      _error ->
-        process(balance, result, tail, false)
-    end
-  end
-
-  def valid?([], _result), do: true
-  def valid?(rules, result) when is_list(rules) and is_list(result) do
-    !Enum.member?(Enum.map(rules, &valid?(&1, &1.value, result)), false)
-  end
-  def valid?(%{type: "length"}, {">=", length}, list), do: length(list) >= length
-
-  def update_result(cmd, result, fun) do
-    fun.(result, cmd) |> IO.inspect()
-  end
-
-  def find_command_config(command) do
-    Enum.find(Config.get(), fn
-      %{criteria: criteria} -> command in criteria
-      %{name: name} -> command == name
-    end)
-  end
+  
 end
