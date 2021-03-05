@@ -3,9 +3,7 @@ defmodule DecentApp do
     This module provides a function to process a list of list of commands, update a
     %Balance{} struct and return a results list.
   """
-  alias DecentApp.Balance
-  alias DecentApp.Actions
-  @cmds Application.fetch_env!(:decent_app, :commands)
+  alias DecentApp.{Balance, Config}
 
   @doc """
   Returns a list of results after successfully  processing a list of list_of_cmds
@@ -30,71 +28,40 @@ defmodule DecentApp do
     -1
 
   """
+
   def call(%Balance{} = balance, commands) do
-    valid_cmds = Enum.map(@cmds, fn c -> c.key end)
+    process(balance, [], commands, true)
+  end
 
-    cond do
-      !is_valid_list?(commands, valid_cmds, true) ->
-        -1
+  def process(_, _, _, false), do: -1
+  def process(balance, result, [], _valid), do: {balance, result}
 
-      true ->
-        process(balance, [], commands, @cmds)
+  def process(balance, result, [cmd | tail], true) do
+    with %{} = command <- find_command_config(cmd),
+         true <- valid?(command.validation_rules, result),
+         result <- command.perform.(result, cmd),
+         %Balance{} = balance <- Balance.update_coins(balance, command.price) do
+      process(balance, result, tail, true)
+    else
+      _error ->
+        process(balance, result, tail, false)
     end
   end
 
-  defp process(balance, result, [], _rules), do: {balance, result}
-  defp process(%{coins: coins} = balance, result, [head | tail], rules) when is_list(result) do
-    cond do
-      coins < 0 ->
-        -1
+  def valid?([], _result), do: true
+  def valid?(rules, result) when is_list(rules) and is_list(result) do
+    !Enum.member?(Enum.map(rules, &valid?(&1, &1.value, result)), false)
+  end
+  def valid?(%{type: "length"}, {">=", length}, list), do: length(list) >= length
 
-      is_integer(head) ->
-        rule = Enum.find(rules, fn cmd -> cmd.key == "PUSH" end)
-
-        case cmd(head, result, balance, rule) do
-          {result, balance} -> process(balance, result, tail, rules)
-          _ -> -1
-        end
-
-      true ->
-        rule = Enum.find(rules, fn cmd -> cmd.key == head end)
-
-        case cmd(head, result, balance, rule) do
-          {result, balance} -> process(balance, result, tail, rules)
-          _ -> -1
-        end
-    end
+  def update_result(cmd, result, fun) do
+    fun.(result, cmd) |> IO.inspect()
   end
 
-  # CMD Definitions
-  defp cmd(cmd, result, balance, rule) do
-    cond do
-      length(result) < rule.min_length -> :invalid
-      true ->
-        {Actions.action(rule.action, result, cmd), Balance.update_coins(balance, rule)}
-    end
+  def find_command_config(command) do
+    Enum.find(Config.get(), fn
+      %{criteria: criteria} -> command in criteria
+      %{name: name} -> command == name
+    end)
   end
-
-  # Command List Validation
-  defp is_valid_list?(_, _, false), do: false
-  defp is_valid_list?([], _, true), do: true
-
-  defp is_valid_list?([head | tail], valid_cmds, true) do
-    cond do
-      !is_integer(head) ->
-        if Enum.member?(valid_cmds, head) do
-          is_valid_list?(tail, valid_cmds, true)
-        else
-          is_valid_list?(tail, valid_cmds, false)
-        end
-
-      true ->
-        if Enum.member?(0..9, head) do
-          is_valid_list?(tail, valid_cmds, true)
-        else
-          is_valid_list?(tail, valid_cmds, false)
-        end
-    end
-  end
-
 end
